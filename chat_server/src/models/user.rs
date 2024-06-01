@@ -114,17 +114,17 @@ mod tests {
 
     let user = User::create(email, name, password, &pool).await?;
     assert_eq!(user.email, email);
-    // assert_eq!(user.fullname, name);
-    // assert!(user.id > 0);
+    assert_eq!(user.fullname, name);
+    assert!(user.id > 0);
 
-    // let user = User::find_by_email(email, &pool).await?;
-    // assert!(user.is_some());
-    // let user = user.unwrap();
-    // assert_eq!(user.email, email);
-    // assert_eq!(user.fullname, name);
+    let user = User::find_by_email(email, &pool).await?;
+    assert!(user.is_some());
+    let user = user.unwrap();
+    assert_eq!(user.email, email);
+    assert_eq!(user.fullname, name);
 
-    // let user = User::verify(email, password, &pool).await?;
-    // assert!(user.is_some());
+    let user = User::verify(email, password, &pool).await?;
+    assert!(user.is_some());
 
     Ok(())
   }
