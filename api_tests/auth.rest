@@ -1,0 +1,18 @@
+### signup user
+POST http://localhost:8009/api/signup
+Content-Type: application/json
+
+{
+	"fullname": "Hzzz",
+	"email": "hzzz@gmail.com",
+	"password": "123456"
+}
+
+### signin user
+POST http://localhost:8009/api/signin
+Content-Type: application/json
+
+{
+	"email": "hzzz@gmail.com",
+	"password": "123456"
+}
