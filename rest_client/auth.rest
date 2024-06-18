@@ -9,6 +9,7 @@ Content-Type: application/json
 }
 
 ### signin user
+# @name signin
 POST http://localhost:8009/api/signin
 Content-Type: application/json
 
@@ -16,3 +17,8 @@ Content-Type: application/json
 	"email": "hzzz@gmail.com",
 	"password": "123456"
 }
+
+@token = {{signin.response.body.token}}
+### chat list
+GET http://localhost:8009/api/chat
+Authorization: Bearer {{token}}
