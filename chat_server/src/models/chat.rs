@@ -126,4 +126,39 @@ mod tests {
     assert_eq!(chat.members.len(), 2);
     assert_eq!(chat.r#type, ChatType::Single);
   }
+
+  #[tokio::test]
+  async fn create_public_named_chat_should_work() {
+    let (_tdb, pool) = get_test_pool(None).await;
+    let input = CreateChat::new("general", &[1, 2, 3], true);
+    let chat = Chat::create(input, 1, &pool)
+      .await
+      .expect("create chat failed");
+    assert_eq!(chat.ws_id, 1);
+    assert_eq!(chat.members.len(), 3);
+    assert_eq!(chat.r#type, ChatType::PublicChannel);
+  }
+
+  #[tokio::test]
+  async fn chat_get_by_id_should_work() {
+    let (_tdb, pool) = get_test_pool(None).await;
+    let chat = Chat::get_by_id(1, &pool)
+      .await
+      .expect("get chat by id failed")
+      .unwrap();
+    assert_eq!(chat.id, 1);
+    assert_eq!(chat.name.unwrap(), "general");
+    assert_eq!(chat.ws_id, 1);
+    assert_eq!(chat.members.len(), 5);
+  }
+
+  #[tokio::test]
+  async fn chat_fetch_all_should_work() {
+    let (_tdb, pool) = get_test_pool(None).await;
+    let chats = Chat::fetch_all(1, &pool).await.expect(
+      "fetch all chats
+  failed",
+    );
+    assert_eq!(chats.len(), 4);
+  }
 }
