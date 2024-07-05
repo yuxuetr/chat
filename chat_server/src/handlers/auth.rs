@@ -52,7 +52,7 @@ mod tests {
   async fn signup_should_work() -> Result<()> {
     let config = AppConfig::load()?;
     let (_tdb, state) = AppState::new_for_test(config).await?;
-    let input = CreateUser::new("Hal", "halzzz@gmail.com", "halzzz");
+    let input = CreateUser::new("acme", "Hal", "halzzz@gmail.com", "halzzz");
     let ret = signup_handler(State(state), Json(input))
       .await?
       .into_response();
@@ -71,7 +71,7 @@ mod tests {
       Path::new("../migrations"),
     );
     let pool = tdb.get_pool().await;
-    let input = CreateUser::new("Hal2", "halzzz2@gmail.com", "halzzz2");
+    let input = CreateUser::new("acme", "Hal2", "halzzz2@gmail.com", "halzzz2");
     User::create(&input, &pool).await?;
     let ret = User::create(&input, &pool).await;
     match ret {
@@ -87,7 +87,7 @@ mod tests {
   async fn signup_duplicate_user_should_409() -> Result<()> {
     let config = AppConfig::load()?;
     let (_tdb, state) = AppState::new_for_test(config).await?;
-    let input = CreateUser::new("Hal3", "halzzz3@gmail.com", "halzzz3");
+    let input = CreateUser::new("acme", "Hal3", "halzzz3@gmail.com", "halzzz3");
     signup_handler(State(state.clone()), Json(input.clone())).await?;
     let ret = signup_handler(State(state.clone()), Json(input.clone()))
       .await
