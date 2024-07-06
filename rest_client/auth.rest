@@ -1,10 +1,33 @@
-### signup user
+### signup user hzzz
 POST http://localhost:8009/api/signup
 Content-Type: application/json
 
 {
 	"fullname": "Hzzz",
 	"email": "hzzz@gmail.com",
+	"workspace": "acme",
+	"password": "123456"
+}
+
+### signup user alice
+POST http://localhost:8009/api/signup
+Content-Type: application/json
+
+{
+	"fullname": "Alice",
+	"email": "alice@gmail.com",
+	"workspace": "acme",
+	"password": "123456"
+}
+
+### signup user bob
+POST http://localhost:8009/api/signup
+Content-Type: application/json
+
+{
+	"fullname": "Bob",
+	"email": "bob@gmail.com",
+	"workspace": "acme",
 	"password": "123456"
 }
 
@@ -19,6 +42,32 @@ Content-Type: application/json
 }
 
 @token = {{signin.response.body.token}}
+### chat create
+POST http://localhost:8009/api/chats
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+	"name": "acme",
+	"members": [1, 2],
+	"public": false
+}
+
 ### chat list
-GET http://localhost:8009/api/chat
+GET http://localhost:8009/api/chats
+Authorization: Bearer {{token}}
+
+### chat update
+PATCH http://localhost:8009/api/chats/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+	"name": "acme",
+	"members": [1, 2, 3],
+	"public": false
+}
+
+### chat delete
+DELETE http://localhost:8009/api/chats/1
 Authorization: Bearer {{token}}

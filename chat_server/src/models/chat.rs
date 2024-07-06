@@ -2,12 +2,19 @@ use super::{Chat, ChatType, ChatUser};
 use crate::AppError;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use tracing::info;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CreateChat {
   pub name: Option<String>,
   pub members: Vec<i64>,
   pub public: bool,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct UpdateChat {
+  pub name: Option<String>,
+  pub members: Option<Vec<i64>>,
+  pub public: Option<bool>,
 }
 
 #[allow(unused)]
@@ -90,6 +97,75 @@ impl Chat {
     .await?;
 
     Ok(chat)
+  }
+
+  // update chat info
+  pub async fn update(id: u64, input: UpdateChat, pool: &PgPool) -> Result<Self, AppError> {
+    let mut chat = Chat::get_by_id(id, pool).await?;
+    info!("{:?}", chat);
+    let mut chat = match chat {
+      Some(chat) => chat,
+      None => return Err(AppError::NotFound("Chat: {id} not found".to_string())),
+    };
+
+    if let Some(name) = input.name {
+      chat.name = Some(name);
+    }
+
+    if let Some(members) = input.members {
+      let users = ChatUser::fetch_by_id(&members, pool).await?;
+      if users.len() != members.len() {
+        return Err(AppError::UpdateChatError(
+          "Some members do not exist".to_string(),
+        ));
+      }
+      chat.members = members;
+    }
+
+    if let Some(public) = input.public {
+      chat.r#type = if public {
+        ChatType::PublicChannel
+      } else {
+        ChatType::PrivateChannel
+      };
+    }
+
+    let chat = sqlx::query_as(
+      r#"
+      UPDATE chats
+      SET name = $1, members = $2, type = $3
+      WHERE id = $4
+      RETURNING id, ws_id, name, type, members, created_at
+      "#,
+    )
+    .bind(chat.name)
+    .bind(chat.members)
+    .bind(chat.r#type)
+    .bind(id as i64)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(chat)
+  }
+
+  pub async fn delete(id: u64, pool: &PgPool) -> Result<(), AppError> {
+    let chat = Chat::get_by_id(id, pool).await?;
+    let chat = match chat {
+      Some(chat) => chat,
+      None => return Err(AppError::NotFound(format!("Chat: {} not found", id))),
+    };
+
+    sqlx::query(
+      r#"
+      DELETE FROM chats
+      WHERE id = $1
+      "#,
+    )
+    .bind(id as i64)
+    .execute(pool)
+    .await?;
+
+    Ok(())
   }
 }
 

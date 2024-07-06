@@ -28,6 +28,12 @@ pub enum AppError {
   #[error("create chat error: {0}")]
   CreateChatError(String),
 
+  #[error("update chat error: {0}")]
+  UpdateChatError(String),
+
+  #[error("delete chat error: {0}")]
+  DeleteChatError(String),
+
   #[error("not found: {0}")]
   NotFound(String),
 }
@@ -42,6 +48,8 @@ impl IntoResponse for AppError {
       Self::HttpHeaderError(_) => StatusCode::UNPROCESSABLE_ENTITY,
       Self::CreateChatError(_) => StatusCode::BAD_REQUEST,
       Self::NotFound(_) => StatusCode::NOT_FOUND,
+      Self::UpdateChatError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+      Self::DeleteChatError(_) => StatusCode::INTERNAL_SERVER_ERROR,
     };
 
     (status, Json(ErrorOutput::new(self.to_string()))).into_response()
