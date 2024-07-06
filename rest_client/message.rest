@@ -1,0 +1,31 @@
+### signin user
+# @name signin
+POST http://localhost:8009/api/signin
+Content-Type: application/json
+
+{
+	"email": "hzzz@gmail.com",
+	"password": "123456"
+}
+
+@token = {{signin.response.body.token}}
+
+### message file upload
+POST http://localhost:8009/api/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebKitFormBoundary7MA4YWxkTrZu0gW
+
+--WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; filename="candle-sam.png"
+Content-Type: application/octet-stream
+
+< /Users/hal/Downloads/candle-sam.png
+--WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; filename="hello.txt"
+
+Hello, World!
+--WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### message get file
+GET http://localhost:8009/api/files/1/a13/e8e/928ba9ba254376cf23481b5be9b766e902.png
+Authorization: Bearer {{token}}

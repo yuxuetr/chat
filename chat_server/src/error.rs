@@ -36,6 +36,9 @@ pub enum AppError {
 
   #[error("not found: {0}")]
   NotFound(String),
+
+  #[error("io error: {0}")]
+  IoError(#[from] std::io::Error),
 }
 
 impl IntoResponse for AppError {
@@ -48,8 +51,9 @@ impl IntoResponse for AppError {
       Self::HttpHeaderError(_) => StatusCode::UNPROCESSABLE_ENTITY,
       Self::CreateChatError(_) => StatusCode::BAD_REQUEST,
       Self::NotFound(_) => StatusCode::NOT_FOUND,
-      Self::UpdateChatError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-      Self::DeleteChatError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+      Self::UpdateChatError(_) => StatusCode::BAD_REQUEST,
+      Self::DeleteChatError(_) => StatusCode::BAD_REQUEST,
+      Self::IoError(_) => StatusCode::INTERNAL_SERVER_ERROR,
     };
 
     (status, Json(ErrorOutput::new(self.to_string()))).into_response()

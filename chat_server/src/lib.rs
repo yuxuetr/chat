@@ -45,6 +45,8 @@ pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
     .route("/chats/:id", delete(delete_chat_handler))
     .route("/chats/:id", post(send_message_handler))
     .route("/chats/:id/message", get(list_message_handler))
+    .route("/upload", post(upload_handler))
+    .route("/files/:ws_id/*path", get(file_handler))
     .layer(from_fn_with_state(state.clone(), verify_token))
     .route("/signin", post(signin_handler))
     .route("/signup", post(signup_handler));
