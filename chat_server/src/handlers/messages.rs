@@ -1,5 +1,5 @@
 use axum::{
-  extract::{Multipart, Path, State},
+  extract::{Multipart, Path, Query, State},
   http::HeaderMap,
   response::IntoResponse,
   Extension, Json,
@@ -7,14 +7,25 @@ use axum::{
 use tokio::fs;
 use tracing::{info, warn};
 
-use crate::{AppError, AppState, ChatFile, User};
+use crate::{AppError, AppState, ChatFile, CreateMessage, ListMessages, User};
 
-pub(crate) async fn send_message_handler() -> impl IntoResponse {
-  "send message"
+pub(crate) async fn send_message_handler(
+  Extension(user): Extension<User>,
+  State(state): State<AppState>,
+  Path(id): Path<u64>,
+  Json(input): Json<CreateMessage>,
+) -> Result<impl IntoResponse, AppError> {
+  let msg = state.create_message(input, id, user.id as _).await?;
+  Ok(Json(msg))
 }
 
-pub(crate) async fn list_message_handler() -> impl IntoResponse {
-  "list message"
+pub(crate) async fn list_message_handler(
+  State(state): State<AppState>,
+  Path(id): Path<u64>,
+  Query(input): Query<ListMessages>,
+) -> Result<impl IntoResponse, AppError> {
+  let messages = state.list_messages(input, id).await?;
+  Ok(Json(messages))
 }
 
 pub(crate) async fn file_handler(
@@ -45,7 +56,7 @@ pub(crate) async fn upload_handler(
   mut multipart: Multipart,
 ) -> Result<impl IntoResponse, AppError> {
   let ws_id = user.ws_id as u64;
-  let base_dir = state.config.server.base_dir.join(ws_id.to_string());
+  let base_dir = &state.config.server.base_dir;
   let mut files = vec![];
   while let Some(field) = multipart.next_field().await.unwrap() {
     let filename = field.file_name().map(|name| name.to_string());
@@ -54,27 +65,15 @@ pub(crate) async fn upload_handler(
       continue;
     };
 
-    let file = ChatFile::new(&filename, &data);
-    let path = file.path(&base_dir);
+    let file = ChatFile::new(ws_id, &filename, &data);
+    let path = file.path(base_dir);
     if path.exists() {
       info!("File {} already exists: {:?}", filename, path);
     } else {
       fs::create_dir_all(path.parent().expect("file path parent should exists")).await?;
       fs::write(path, data).await?;
     }
-    files.push(file.url(ws_id));
+    files.push(file.url());
   }
   Ok(Json(files))
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn chat_file_new_should_work() {
-    let file = ChatFile::new("test.txt", b"hello world");
-    assert_eq!(file.ext, "txt");
-    assert_eq!(file.hash, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
-  }
 }

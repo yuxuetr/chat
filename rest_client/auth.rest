@@ -42,32 +42,3 @@ Content-Type: application/json
 }
 
 @token = {{signin.response.body.token}}
-### chat create
-POST http://localhost:8009/api/chats
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-	"name": "acme",
-	"members": [1, 2],
-	"public": false
-}
-
-### chat list
-GET http://localhost:8009/api/chats
-Authorization: Bearer {{token}}
-
-### chat update
-PATCH http://localhost:8009/api/chats/1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-	"name": "acme",
-	"members": [1, 2, 3],
-	"public": false
-}
-
-### chat delete
-DELETE http://localhost:8009/api/chats/1
-Authorization: Bearer {{token}}

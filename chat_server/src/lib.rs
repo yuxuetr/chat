@@ -14,7 +14,7 @@ use axum::{
 pub use config::AppConfig;
 use error::*;
 use handlers::*;
-use middlewares::{set_layer, verify_token};
+use middlewares::{set_layer, verify_chat, verify_token};
 use models::*;
 use sqlx::PgPool;
 use std::{fmt, ops::Deref, sync::Arc};
@@ -37,14 +37,17 @@ pub(crate) struct AppStateInner {
 pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
   let state = AppState::try_new(config).await?;
 
+  let chat = Router::new()
+    .route("/:id", get(get_chat_handler))
+    .route("/:id", patch(update_chat_handler))
+    .route("/:id", delete(delete_chat_handler))
+    .route("/:id", post(send_message_handler))
+    .route("/:id/messages", get(list_message_handler))
+    .layer(from_fn_with_state(state.clone(), verify_chat))
+    .route("/", get(list_chat_handler).post(create_chat_handler));
+
   let api = Router::new()
-    .route("/chats", get(list_chat_handler))
-    .route("/chats", post(create_chat_handler))
-    .route("/chats/:id", get(get_chat_handler))
-    .route("/chats/:id", patch(update_chat_handler))
-    .route("/chats/:id", delete(delete_chat_handler))
-    .route("/chats/:id", post(send_message_handler))
-    .route("/chats/:id/message", get(list_message_handler))
+    .nest("/chats", chat)
     .route("/upload", post(upload_handler))
     .route("/files/:ws_id/*path", get(file_handler))
     .layer(from_fn_with_state(state.clone(), verify_token))
@@ -104,7 +107,8 @@ mod test_util {
   use sqlx_db_tester::TestPg;
 
   impl AppState {
-    pub async fn new_for_test(config: AppConfig) -> Result<(TestPg, Self), AppError> {
+    pub async fn new_for_test() -> Result<(TestPg, Self), AppError> {
+      let config = AppConfig::load()?;
       let dk = DecodingKey::load(&config.auth.pk).context("load pk failed")?;
       let ek = EncodingKey::load(&config.auth.sk).context("load sk failed")?;
       let post = config.server.db_url.rfind('/').expect("invalid db_url");

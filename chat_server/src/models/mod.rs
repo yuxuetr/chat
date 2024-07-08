@@ -6,6 +6,7 @@ mod workspace;
 
 pub use chat::{CreateChat, UpdateChat};
 use chrono::{DateTime, Utc};
+pub use message::{CreateMessage, ListMessages};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 pub use user::{CreateUser, SigninUser};
@@ -58,6 +59,7 @@ pub struct Chat {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatFile {
+  pub ws_id: u64,
   pub ext: String,
   pub hash: String,
 }
