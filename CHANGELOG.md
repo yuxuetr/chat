@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file. See [conven
 - add user & workspace & chat model functions and refactor test code - ([1f58d58](https://github.com/yuxuetr/chat/commit/1f58d580d859d9fb066488f08fec5633c83fa93a)) - yuxuetr
 - support chat model handlers and REST Client test handler API - ([f022e63](https://github.com/yuxuetr/chat/commit/f022e636fd6e4a9a4563153be974f0e58d1e48c8)) - yuxuetr
 - support message file upload and get file - ([3994237](https://github.com/yuxuetr/chat/commit/39942372b4ebe57c0206f6f8a6d0c04ec5adf20e)) - yuxuetr
+- support messages handlers and verify_chat middlerware - ([df301ae](https://github.com/yuxuetr/chat/commit/df301ae35e9e153ad45b8eb17ba39e8eea04b6d0)) - yuxuetr
 
 ### Refactoring
 
