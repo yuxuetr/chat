@@ -16,8 +16,8 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-	"name": "acme",
-	"members": [1, 2],
+	"name": "acme1",
+	"members": [1, 2, 3],
 	"public": false
 }
 

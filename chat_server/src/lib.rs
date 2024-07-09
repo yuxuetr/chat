@@ -3,7 +3,6 @@ mod error;
 mod handlers;
 mod middlewares;
 mod models;
-mod utils;
 
 use anyhow::Context;
 use axum::{
@@ -11,23 +10,26 @@ use axum::{
   routing::{delete, get, patch, post},
   Router,
 };
+use chat_core::{
+  middlewares::{set_layer, verify_token, TokenVerify},
+  DecodingKey, EncodingKey, User,
+};
 pub use config::AppConfig;
 use error::*;
 use handlers::*;
-use middlewares::{set_layer, verify_chat, verify_token};
-use models::*;
+use middlewares::verify_chat;
+pub use models::*;
 use sqlx::PgPool;
 use std::{fmt, ops::Deref, sync::Arc};
 use tokio::fs;
-use utils::{DecodingKey, EncodingKey};
 
 #[derive(Debug, Clone)]
-pub(crate) struct AppState {
+pub struct AppState {
   inner: Arc<AppStateInner>,
 }
 
 #[allow(unused)]
-pub(crate) struct AppStateInner {
+pub struct AppStateInner {
   pub(crate) config: AppConfig,
   pub(crate) dk: DecodingKey,
   pub(crate) ek: EncodingKey,
@@ -36,7 +38,6 @@ pub(crate) struct AppStateInner {
 
 pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
   let state = AppState::try_new(config).await?;
-
   let chat = Router::new()
     .route("/:id", get(get_chat_handler))
     .route("/:id", patch(update_chat_handler))
@@ -47,10 +48,11 @@ pub async fn get_router(config: AppConfig) -> Result<Router, AppError> {
     .route("/", get(list_chat_handler).post(create_chat_handler));
 
   let api = Router::new()
+    .route("/users", get(list_chat_users_handler))
     .nest("/chats", chat)
     .route("/upload", post(upload_handler))
     .route("/files/:ws_id/*path", get(file_handler))
-    .layer(from_fn_with_state(state.clone(), verify_token))
+    .layer(from_fn_with_state(state.clone(), verify_token::<AppState>))
     .route("/signin", post(signin_handler))
     .route("/signup", post(signup_handler));
 
@@ -68,6 +70,14 @@ impl Deref for AppState {
 
   fn deref(&self) -> &Self::Target {
     &self.inner
+  }
+}
+
+impl TokenVerify for AppState {
+  type Error = AppError;
+
+  fn verify(&self, token: &str) -> Result<User, Self::Error> {
+    Ok(self.dk.verify(token)?)
   }
 }
 
